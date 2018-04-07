@@ -107,7 +107,7 @@ while True:
         force_print("Processing request: %s\n" % request)
         if request.strip() == "exit":
             force_print("Exiting.\n")
-            send(outbox, address, phoneaddress, "Exiting tsh.")
+            send(outbox, address, phoneaddress, "> exit\r\nExiting tsh.")
             outbox.quit()
             exit()
         result = subprocess.Popen(request, shell=True, stdout=subprocess.PIPE).stdout.read().decode("utf-8")
