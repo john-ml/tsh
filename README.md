@@ -17,7 +17,7 @@ python tsh.py
 
 Give away your personal information:
 ```
-Email: address@domain
+GMail: username
 Password: hunter2 (suppressed)
 Phone number (numbers only): 3141592653
 Phone service: AT&T

@@ -58,7 +58,7 @@ def force_print(s):
     sys.stdout.flush()
 
 WELCOME_MESSAGE = "Welcome to tsh.\r\n- reply to this message with shell commands\r\n- \"exit\" to exit"
-address = input("Email: ")
+address = input("GMail: ") + "@gmail.com"
 password = getpass("Password: ")
 number = input("Phone number (numbers only): ")
 gateways = {
