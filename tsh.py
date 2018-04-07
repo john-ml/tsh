@@ -113,7 +113,6 @@ while True:
             outbox.quit()
             exit()
         result = subprocess.Popen(request, shell=True, stdout=subprocess.PIPE).stdout.read()
-        print(result)
         result = asciiify(result)
         force_print("Output: %s\n" % result)
         force_print("Sending output to %s... " % phoneaddress)
