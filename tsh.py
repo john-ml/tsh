@@ -96,13 +96,13 @@ force_print("done.\n")
 while True:
     force_print("Retrieving requests... ")
     requests = emails(inbox, phoneaddress)
-    requests = [r["body"] for r in requests]
-    requests = [r[0:r.find("\r\n")] for r in requests]
-    requests = requests[::-1]
+    requests = [r["body"] for r in requests] # get text message
+    requests = [r[0:r.find("\r\n")] for r in requests] # first line only
+    requests = requests[::-1] # execute earliest to latest
     if len(requests) == 0:
         force_print("got nothing.\n")
     else:
-        force_print("got: %s\n" % "".join(["\n\t" + r for r in requests]))
+        force_print("got: \n\t%s\n" % "\n\t".join(requests))
     for request in requests:
         force_print("Processing request: %s\n" % request)
         if request.strip() == "exit":
