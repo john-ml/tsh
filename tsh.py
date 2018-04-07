@@ -10,11 +10,15 @@ from getpass import getpass
 def emails(inbox, phoneaddress, earliest):
     # adapted from https://codehandbook.org/how-to-read-email-from-gmail-using-python/
     inbox.select("inbox")
-    type, data = inbox.search(None, "ALL")
+    type, data = inbox.search(None, "(UNSEEN)", "(FROM \"%s\")" % phoneaddress)
     ids = data[0].split()
-    result = []
+    print(ids)
+    if len(ids) == 0:
+        return []
 
-    for i in range(int(ids[-1]), int(ids[0]), -1):
+    result = []
+    for i in range(int(ids[-1]), int(ids[0]) - 1, -1):
+        print(i)
         type, data = inbox.fetch(str(i), "(RFC822)")
 
         for part in data:
@@ -120,7 +124,7 @@ while True:
         force_print("got: %s\n" % "".join(["\n\t" + r for r in requests]))
     for request in requests:
         force_print("Processing request: %s\n" % request)
-        if request == "exit":
+        if request.strip() == "exit":
             force_print("Exiting.\n")
             send(outbox, address, phoneaddress, "Exiting tsh.")
             outbox.quit()
@@ -128,5 +132,6 @@ while True:
         result = subprocess.Popen(request, shell=True, stdout=subprocess.PIPE).stdout.read().decode("utf-8")
         force_print("Output: %s\n" % result)
         force_print("Sending output to %s... " % phoneaddress)
-        send(outbox, address, phoneaddress, result)
+        send(outbox, address, phoneaddress, "> %s\r\n%s" % (request, result))
         force_print("done.\n")
+    time.sleep(3)
