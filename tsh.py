@@ -6,6 +6,11 @@ import sys
 import subprocess
 from getpass import getpass
 
+def asciiify(s):
+    s = [ord(' ') if c == ord('\t') else c for c in s] # AT&T can't display tabs
+    printable = lambda c: 32 <= c <= 127 or c == ord('\r') or c == ord('\n')
+    return "".join([chr(c) for c in s if printable(c)])
+
 def emails(inbox, phoneaddress):
     # adapted from https://codehandbook.org/how-to-read-email-from-gmail-using-python/
     # imap search query from https://stackoverflow.com/questions/22856198/how-to-get-unread-messages-and-set-message-read-flags-over-imap-using-python
@@ -37,10 +42,7 @@ def emails(inbox, phoneaddress):
                 else:
                     body = msg.get_payload(decode=True)
 
-                try: # breaks if not utf-8, but oh well
-                    body = body.decode("utf-8")
-                except:
-                    continue
+                body = asciiify(body)
                 result.append({
                     "sender": msg["From"],
                     "subject": msg["Subject"],
@@ -110,9 +112,13 @@ while True:
             send(outbox, address, phoneaddress, "> exit\r\nExiting tsh.")
             outbox.quit()
             exit()
-        result = subprocess.Popen(request, shell=True, stdout=subprocess.PIPE).stdout.read().decode("utf-8")
+        result = subprocess.Popen(request, shell=True, stdout=subprocess.PIPE).stdout.read()
+        print(result)
+        result = asciiify(result)
         force_print("Output: %s\n" % result)
         force_print("Sending output to %s... " % phoneaddress)
         send(outbox, address, phoneaddress, "> %s\r\n%s" % (request, result))
         force_print("done.\n")
     time.sleep(3)
+
+# error: cat rin.txt
