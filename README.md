@@ -6,7 +6,6 @@ message, allowing you to text shell commands to your computer.
 ### Requirements
 
 - a phone, GMail account, and Python 3
-- [dateparser](https://github.com/scrapinghub/dateparser) installed
 - [less secure apps](https://myaccount.google.com/lesssecureapps) enabled
 
 ### Usage

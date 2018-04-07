@@ -4,39 +4,23 @@ import email
 import time
 import sys
 import subprocess
-from dateparser.search import search_dates
 from getpass import getpass
 
-def emails(inbox, phoneaddress, earliest):
+def emails(inbox, phoneaddress):
     # adapted from https://codehandbook.org/how-to-read-email-from-gmail-using-python/
     inbox.select("inbox")
     type, data = inbox.search(None, "(UNSEEN)", "(FROM \"%s\")" % phoneaddress)
     ids = data[0].split()
-    print(ids)
     if len(ids) == 0:
         return []
 
     result = []
     for i in range(int(ids[-1]), int(ids[0]) - 1, -1):
-        print(i)
         type, data = inbox.fetch(str(i), "(RFC822)")
 
         for part in data:
             if isinstance(part, tuple):
                 msg = email.message_from_string(part[1].decode("utf-8"))
-
-                sender = msg["From"]
-                if sender != phoneaddress:
-                    break
-
-                try: # sometimes breaks with error about date comparisons
-                    dates = search_dates(msg["Date"])
-                except:
-                    continue
-                timestamp = dates[0][1].timestamp()
-
-                if timestamp < earliest:
-                    break
 
                 # adapted from https://stackoverflow.com/questions/17874360/python-how-to-parse-the-body-from-a-raw-email-given-that-raw-email-does-not
                 if msg.is_multipart():
@@ -59,8 +43,7 @@ def emails(inbox, phoneaddress, earliest):
                 result.append({
                     "sender": msg["From"],
                     "subject": msg["Subject"],
-                    "body": body,
-                    "timestamp": timestamp
+                    "body": body
                 })
 
     return result
@@ -109,12 +92,9 @@ outbox.login(address, password)
 send(outbox, address, phoneaddress, WELCOME_MESSAGE)
 force_print("done.\n")
 
-last_retrieval = time.time()
 while True:
     force_print("Retrieving requests... ")
-    new_retrieval = time.time()
-    requests = emails(inbox, phoneaddress, last_retrieval)
-    last_retrieval = new_retrieval
+    requests = emails(inbox, phoneaddress)
     requests = [r["body"] for r in requests]
     requests = [r[0:r.find("\r\n")] for r in requests]
     requests = requests[::-1]
