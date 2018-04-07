@@ -8,6 +8,7 @@ from getpass import getpass
 
 def emails(inbox, phoneaddress):
     # adapted from https://codehandbook.org/how-to-read-email-from-gmail-using-python/
+    # imap search query from https://stackoverflow.com/questions/22856198/how-to-get-unread-messages-and-set-message-read-flags-over-imap-using-python
     inbox.select("inbox")
     type, data = inbox.search(None, "(UNSEEN)", "(FROM \"%s\")" % phoneaddress)
     ids = data[0].split()
