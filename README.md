@@ -25,4 +25,6 @@ Phone number (numbers only): 3141592653
 Phone service: AT&T
 ```
 
-tsh will text you and start listening for replies.
+That's it! tsh will text you and start listening for replies.
+
+Try texting it `echo hello, world` or something.
