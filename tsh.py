@@ -119,5 +119,3 @@ while True:
         send(outbox, address, phoneaddress, "> %s\r\n%s" % (request, result))
         force_print("done.\n")
     time.sleep(3)
-
-# error: cat rin.txt
