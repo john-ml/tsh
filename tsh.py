@@ -67,8 +67,6 @@ def send(outbox, sender, password, receiver, message):
         outbox.sendmail(sender, receiver, ".\r\n" + message)
 
 WELCOME_MESSAGE = "Welcome to tsh.\r\n- reply to this message with shell commands\r\n- \"exit\" to exit"
-address = input("GMail: ") + "@gmail.com"
-password = getpass("Password: ")
 number = input("Phone number (numbers only): ")
 gateways = {
     "Alltel": "message.alltel.com",
@@ -89,6 +87,8 @@ while True:
         gateway = gateways[service]
         break
 phoneaddress = number + "@" + gateway
+address = input("GMail: ") + "@gmail.com"
+password = getpass("Password: ")
 
 force_print("Connecting... ")
 inbox = imaplib.IMAP4_SSL("imap.gmail.com")

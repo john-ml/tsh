@@ -17,10 +17,10 @@ python tsh.py
 
 Give away your personal information:
 ```
-GMail: username
-Password: hunter2 (suppressed)
 Phone number (numbers only): 3141592653
 Phone service: AT&T
+GMail: username
+Password: hunter2 (suppressed)
 ```
 
 That's it! tsh will text you, execute any unread texts, and await further instruction.
