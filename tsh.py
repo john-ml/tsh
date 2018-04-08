@@ -1,3 +1,4 @@
+import random
 import imaplib
 import smtplib
 import email
@@ -57,72 +58,92 @@ def emails(inbox, phoneaddress):
 
 # adapted from http://naelshiab.com/tutorial-send-email-python/
 def send(outbox, sender, password, receiver, message):
+    identifier = "".join([chr(random.randint(32, 128)) for i in range(10)])
+    force_print("identifier: %s " % identifier)
     try:
-        outbox.sendmail(sender, receiver, ".\r\n" + message)
+        outbox.sendmail(sender, receiver, "TO: %s\r\n%s\r\n\r\n%s" % (receiver, identifier, message))
     except smtplib.SMTPSenderRefused: # log in again on timeout
         force_print("connection timed out. Reconnecting... ")
         outbox.connect("smtp.gmail.com", 465)
         outbox.ehlo()
         outbox.login(sender, password)
-        outbox.sendmail(sender, receiver, ".\r\n" + message)
+        outbox.sendmail(sender, receiver, "TO: %s\r\n%s\r\n\r\n%s" % (receiver, identifier, message))
 
-WELCOME_MESSAGE = "Welcome to tsh.\r\n- reply to this message with shell commands\r\n- \"exit\" to exit"
-number = input("Phone number (numbers only): ")
-gateways = {
-    "Alltel": "message.alltel.com",
-    "AT&T": "txt.att.net",
-    "T-Mobile": "tmomail.net",
-    "Virgin Mobile": "vmobl.com",
-    "Sprint": "messaging.sprintpcs.com",
-    "Verizon": "vtext.com",
-    "Nextel": "messaging.nextel.com",
-    "US Cellular": "mms.uscc.net"
-}
-while True:
-    service = input("Phone service: ")
-    if service not in gateways:
-        print("Error: unknown service \"%s\"" % service)
-        print("Choose one of (%s)" % ", ".join([s for s in gateways]))
+if __name__ == "__main__":
+    WELCOME_MESSAGE = "tsh: sh via text message\r\n- reply to this message with shell commands\r\n- \"exit\" to exit"
+
+    argc = len(sys.argv) - 1
+    if argc > 0:
+        number = sys.argv[1]
     else:
-        gateway = gateways[service]
-        break
-phoneaddress = number + "@" + gateway
-address = input("GMail: ") + "@gmail.com"
-password = getpass("Password: ")
+        number = input("Phone number (numbers only): ")
 
-force_print("Connecting... ")
-inbox = imaplib.IMAP4_SSL("imap.gmail.com")
-inbox.login(address, password)
-force_print("done.\n")
+    gateways = {
+        "Alltel": "message.alltel.com",
+        "AT&T": "txt.att.net",
+        "T-Mobile": "tmomail.net",
+        "Virgin Mobile": "vmobl.com",
+        "Sprint": "messaging.sprintpcs.com",
+        "Verizon": "vtext.com",
+        "Nextel": "messaging.nextel.com",
+        "US Cellular": "mms.uscc.net"
+    }
+    while True:
+        if argc > 1:
+            service = sys.argv[2]
+        else:
+            service = input("Phone service: ")
+        if service not in gateways:
+            print("Error: unknown service \"%s\"" % service)
+            print("Choose one of (%s)" % ", ".join([s for s in gateways]))
+            if argc > 1:
+                exit()
+        else:
+            gateway = gateways[service]
+            break
+    phoneaddress = number + "@" + gateway
 
-# adapted from https://stackoverflow.com/questions/17332384/python-3-send-email-smtp-gmail-error-smtpexception
-force_print("Sending initial text... ")
-outbox = smtplib.SMTP_SSL("smtp.gmail.com", 465)
-outbox.login(address, password)
-send(outbox, address, password, phoneaddress, WELCOME_MESSAGE)
-force_print("done.\n")
-
-while True:
-    force_print("Retrieving requests... ")
-    requests = emails(inbox, phoneaddress)
-    requests = [r["body"] for r in requests] # get text message
-    requests = [r[0:r.find("\r\n")] for r in requests] # first line only
-    requests = requests[::-1] # execute earliest to latest
-    if len(requests) == 0:
-        force_print("got nothing.\n")
+    if argc > 2:
+        address = sys.argv[3]
     else:
-        force_print("got: \n\t%s\n" % "\n\t".join(requests))
-    for request in requests:
-        force_print("Processing request: %s\n" % request)
-        if request.strip() == "exit":
-            force_print("Exiting.\n")
-            send(outbox, address, password, phoneaddress, "> exit\r\nExiting tsh.")
-            outbox.quit()
-            exit()
-        result = subprocess.Popen(request, shell=True, stdout=subprocess.PIPE).stdout.read()
-        result = asciiify(result)
-        force_print("Output: %s\n" % result)
-        force_print("Sending output to %s... " % phoneaddress)
-        send(outbox, address, password, phoneaddress, "> %s\r\n%s" % (request, result))
-        force_print("done.\n")
-    time.sleep(3)
+        address = input("GMail: ")
+    address += "@gmail.com"
+
+    password = getpass("Password: ")
+
+    force_print("Connecting... ")
+    inbox = imaplib.IMAP4_SSL("imap.gmail.com")
+    inbox.login(address, password)
+    force_print("done.\n")
+
+    # adapted from https://stackoverflow.com/questions/17332384/python-3-send-email-smtp-gmail-error-smtpexception
+    force_print("Sending initial text... ")
+    outbox = smtplib.SMTP_SSL("smtp.gmail.com", 465)
+    outbox.login(address, password)
+    send(outbox, address, password, phoneaddress, WELCOME_MESSAGE)
+    force_print("done.\n")
+
+    while True:
+        force_print("Retrieving requests... ")
+        requests = emails(inbox, phoneaddress)
+        requests = [r["body"] for r in requests] # get text message
+        requests = [r[0:r.find("\r\n")] for r in requests] # first line only
+        requests = requests[::-1] # execute earliest to latest
+        if len(requests) == 0:
+            force_print("got nothing.\n")
+        else:
+            force_print("got: \n\t%s\n" % "\n\t".join(requests))
+        for request in requests:
+            force_print("Processing request: %s\n" % request)
+            if request.strip() == "exit":
+                force_print("Exiting.\n")
+                send(outbox, address, password, phoneaddress, "> exit\r\nExiting tsh.")
+                outbox.quit()
+                exit()
+            result = subprocess.Popen(request, shell=True, stdout=subprocess.PIPE).stdout.read()
+            result = asciiify(result)
+            force_print("Output: %s\n" % result)
+            force_print("Sending output to %s... " % phoneaddress)
+            send(outbox, address, password, phoneaddress, "> %s\r\n%s" % (request, result))
+            force_print("done.\n")
+        time.sleep(3)
