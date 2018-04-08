@@ -11,6 +11,10 @@ def asciiify(s):
     printable = lambda c: 32 <= c <= 127 or c == ord('\r') or c == ord('\n')
     return "".join([chr(c) for c in s if printable(c)])
 
+def force_print(s):
+    sys.stdout.write(s)
+    sys.stdout.flush()
+
 def emails(inbox, phoneaddress):
     # adapted from https://codehandbook.org/how-to-read-email-from-gmail-using-python/
     # imap search query from https://stackoverflow.com/questions/22856198/how-to-get-unread-messages-and-set-message-read-flags-over-imap-using-python
@@ -52,12 +56,15 @@ def emails(inbox, phoneaddress):
     return result
 
 # adapted from http://naelshiab.com/tutorial-send-email-python/
-def send(outbox, sender, receiver, message):
-    outbox.sendmail(sender, receiver, ".\r\n" + message)
-
-def force_print(s):
-    sys.stdout.write(s)
-    sys.stdout.flush()
+def send(outbox, sender, password, receiver, message):
+    try:
+        outbox.sendmail(sender, receiver, ".\r\n" + message)
+    except smtplib.SMTPSenderRefused: # log in again on timeout
+        force_print("connection timed out. Reconnecting... ")
+        outbox.connect("smtp.gmail.com", 465)
+        outbox.ehlo()
+        outbox.login(sender, password)
+        outbox.sendmail(sender, receiver, ".\r\n" + message)
 
 WELCOME_MESSAGE = "Welcome to tsh.\r\n- reply to this message with shell commands\r\n- \"exit\" to exit"
 address = input("GMail: ") + "@gmail.com"
@@ -92,7 +99,7 @@ force_print("done.\n")
 force_print("Sending initial text... ")
 outbox = smtplib.SMTP_SSL("smtp.gmail.com", 465)
 outbox.login(address, password)
-send(outbox, address, phoneaddress, WELCOME_MESSAGE)
+send(outbox, address, password, phoneaddress, WELCOME_MESSAGE)
 force_print("done.\n")
 
 while True:
@@ -109,13 +116,13 @@ while True:
         force_print("Processing request: %s\n" % request)
         if request.strip() == "exit":
             force_print("Exiting.\n")
-            send(outbox, address, phoneaddress, "> exit\r\nExiting tsh.")
+            send(outbox, address, password, phoneaddress, "> exit\r\nExiting tsh.")
             outbox.quit()
             exit()
         result = subprocess.Popen(request, shell=True, stdout=subprocess.PIPE).stdout.read()
         result = asciiify(result)
         force_print("Output: %s\n" % result)
         force_print("Sending output to %s... " % phoneaddress)
-        send(outbox, address, phoneaddress, "> %s\r\n%s" % (request, result))
+        send(outbox, address, password, phoneaddress, "> %s\r\n%s" % (request, result))
         force_print("done.\n")
     time.sleep(3)
