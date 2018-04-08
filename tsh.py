@@ -9,7 +9,7 @@ from getpass import getpass
 
 def asciiify(s):
     s = [ord(' ') if c == ord('\t') else c for c in s] # AT&T can't display tabs
-    printable = lambda c: 32 <= c <= 127 or c == ord('\r') or c == ord('\n')
+    printable = lambda c: 32 <= c < 127 or c == ord('\r') or c == ord('\n')
     return "".join([chr(c) for c in s if printable(c)])
 
 def force_print(s):
@@ -58,7 +58,7 @@ def emails(inbox, phoneaddress):
 
 # adapted from http://naelshiab.com/tutorial-send-email-python/
 def send(outbox, sender, password, receiver, message):
-    identifier = "".join([chr(random.randint(32, 128)) for i in range(10)])
+    identifier = "".join([chr(random.randint(32, 127)) for i in range(10)])
     force_print("identifier: %s " % identifier)
     try:
         outbox.sendmail(sender, receiver, "TO: %s\r\n%s\r\n\r\n%s" % (receiver, identifier, message))
