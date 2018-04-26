@@ -7,6 +7,10 @@ import sys
 import subprocess
 from getpass import getpass
 
+from email.mime.text import MIMEText
+from email.mime.image import MIMEImage
+from email.mime.multipart import MIMEMultipart
+
 def asciiify(s):
     s = [ord(' ') if c == ord('\t') else c for c in s] # AT&T can't display tabs
     printable = lambda c: 32 <= c < 127 or c == ord('\r') or c == ord('\n')
@@ -71,6 +75,30 @@ def send(outbox, sender, password, receiver, message):
         outbox.ehlo()
         outbox.login(sender, password)
         outbox.sendmail(sender, receiver, "TO: %s\r\n%s\r\n\r\n%s" % (receiver, identifier, message))
+
+def send_screen(outbox, sender, password, receiver):
+    identifier = "".join([chr(random.randint(32, 127)) for i in range(10)])
+    force_print("identifier: %s " % identifier)
+
+    img_data = open(ImgFileName, 'rb').read()
+    msg = MIMEMultipart()
+    msg['Subject'] = ''
+    msg['From'] = sender
+    msg['To'] = receiver
+
+    text = MIMEText(identifier)
+    msg.attach(text)
+    image = MIMEImage(img_data, name=os.path.basename("/tmp/temp_screenshot.png"))
+    msg.attach(image)
+
+   try:
+        outbox.sendmail(sender, receiver, msg.as_string())
+    except smtplib.SMTPSenderRefused: # log in again on timeout
+        force_print("connection timed out. Reconnecting... ")
+        outbox.connect("smtp.gmail.com", 465)
+        outbox.ehlo()
+        outbox.login(sender, password)
+        outbox.sendmail(sender, receiver, msg.as_string())
 
 if __name__ == "__main__":
     WELCOME_MESSAGE = "tsh: sh via text message\r\n- reply to this message with shell commands\r\n- \"exit\" to exit"
@@ -146,6 +174,7 @@ if __name__ == "__main__":
             result = asciiify(result)
             force_print("Output: %s\n" % result)
             force_print("Sending output to %s... " % phoneaddress["mms"])
-            send(outbox, address, password, phoneaddress["mms"], "> %s\r\n%s" % (request, result))
+            #send(outbox, address, password, phoneaddress["mms"], "> %s\r\n%s" % (request, result))
+            send_screen(outbox, address, password, phoneaddress["mms"])
             force_print("done.\n")
         time.sleep(3)
