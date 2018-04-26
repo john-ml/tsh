@@ -7,6 +7,7 @@ import sys
 import subprocess
 from getpass import getpass
 
+import os
 from email.mime.text import MIMEText
 from email.mime.image import MIMEImage
 from email.mime.multipart import MIMEMultipart
@@ -80,7 +81,8 @@ def send_screen(outbox, sender, password, receiver):
     identifier = "".join([chr(random.randint(32, 127)) for i in range(10)])
     force_print("identifier: %s " % identifier)
 
-    img_data = open(ImgFileName, 'rb').read()
+    subprocess.call(["sh", "/home/user/mega/c/scripts/getscr.sh"])
+    img_data = open("/tmp/temp_screenshot.jpg", "rb").read()
     msg = MIMEMultipart()
     msg['Subject'] = ''
     msg['From'] = sender
@@ -88,10 +90,10 @@ def send_screen(outbox, sender, password, receiver):
 
     text = MIMEText(identifier)
     msg.attach(text)
-    image = MIMEImage(img_data, name=os.path.basename("/tmp/temp_screenshot.png"))
+    image = MIMEImage(img_data, name=os.path.basename("/tmp/temp_screenshot.jpg"))
     msg.attach(image)
 
-   try:
+    try:
         outbox.sendmail(sender, receiver, msg.as_string())
     except smtplib.SMTPSenderRefused: # log in again on timeout
         force_print("connection timed out. Reconnecting... ")
@@ -170,11 +172,13 @@ if __name__ == "__main__":
                 send(outbox, address, password, phoneaddress["mms"], "> exit\r\nExiting tsh.")
                 outbox.quit()
                 exit()
+            if request.strip() == "getscr":
+                send_screen(outbox, address, password, phoneaddress["mms"])
+                continue
             result = subprocess.Popen(request, shell=True, stdout=subprocess.PIPE).stdout.read()
             result = asciiify(result)
             force_print("Output: %s\n" % result)
             force_print("Sending output to %s... " % phoneaddress["mms"])
-            #send(outbox, address, password, phoneaddress["mms"], "> %s\r\n%s" % (request, result))
-            send_screen(outbox, address, password, phoneaddress["mms"])
+            send(outbox, address, password, phoneaddress["mms"], "> %s\r\n%s" % (request, result))
             force_print("done.\n")
         time.sleep(3)
