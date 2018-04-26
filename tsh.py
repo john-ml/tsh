@@ -81,7 +81,7 @@ def send_screen(outbox, sender, password, receiver):
     identifier = "".join([chr(random.randint(32, 127)) for i in range(10)])
     force_print("identifier: %s " % identifier)
 
-    subprocess.call(["sh", "/home/user/mega/c/scripts/getscr.sh"])
+    subprocess.call(["sh", "scripts/getscr"])
     img_data = open("/tmp/temp_screenshot.jpg", "rb").read()
     msg = MIMEMultipart()
     msg['Subject'] = ''
