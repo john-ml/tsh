@@ -20,7 +20,7 @@ def emails(inbox, phoneaddress):
     # adapted from https://codehandbook.org/how-to-read-email-from-gmail-using-python/
     # imap search query from https://stackoverflow.com/questions/22856198/how-to-get-unread-messages-and-set-message-read-flags-over-imap-using-python
     inbox.select("inbox")
-    type, data = inbox.search(None, "(UNSEEN)", "(FROM \"%s\")" % phoneaddress)
+    type, data = inbox.search(None, "(UNSEEN)", "OR", "(FROM \"%s\")" % phoneaddress["sms"], "(FROM \"%s\")" % phoneaddress["mms"])
     ids = data[0].split()
     if len(ids) == 0:
         return []
@@ -42,14 +42,15 @@ def emails(inbox, phoneaddress):
 
                         # skip any text/plain (txt) attachments
                         if "text" in ctype and "attachment" not in cdispo:
-                            print(part.get_payload(decode=True))
-                            body = asciiify(part.get_payload(decode=True))
-                            body = body[body.find(".")+1:body.rfind(".")+1]
+                            body = part.get_payload(decode=True)
                             break
                 # not multipart - i.e. plain text, no attachments, keeping fingers crossed
                 else:
-                    body = asciiify(msg.get_payload(decode=True))
+                    body = msg.get_payload(decode=True)
 
+                body = asciiify(body)
+                print(body)
+                body = body[body.find(".")+1:body.rfind(".\r\n")+1]
                 result.append({
                     "sender": msg["From"],
                     "subject": msg["Subject"],
@@ -102,7 +103,7 @@ if __name__ == "__main__":
         else:
             gateway = gateways[service]
             break
-    phoneaddress = number + "@" + gateway["mms"]
+    phoneaddress = { "sms": number + "@" + gateway["sms"], "mms": number + "@" + gateway["mms"] }
 
     if argc > 2:
         address = sys.argv[3]
@@ -121,7 +122,7 @@ if __name__ == "__main__":
     force_print("Sending initial text... ")
     outbox = smtplib.SMTP_SSL("smtp.gmail.com", 465)
     outbox.login(address, password)
-    send(outbox, address, password, phoneaddress, WELCOME_MESSAGE)
+    send(outbox, address, password, phoneaddress["sms"], WELCOME_MESSAGE)
     force_print("done.\n")
 
     while True:
@@ -138,13 +139,13 @@ if __name__ == "__main__":
             force_print("Processing request: %s\n" % request)
             if request.strip() == "exit":
                 force_print("Exiting.\n")
-                send(outbox, address, password, phoneaddress, "> exit\r\nExiting tsh.")
+                send(outbox, address, password, phoneaddress["mms"], "> exit\r\nExiting tsh.")
                 outbox.quit()
                 exit()
             result = subprocess.Popen(request, shell=True, stdout=subprocess.PIPE).stdout.read()
             result = asciiify(result)
             force_print("Output: %s\n" % result)
-            force_print("Sending output to %s... " % phoneaddress)
-            send(outbox, address, password, phoneaddress, "> %s\r\n%s" % (request, result))
+            force_print("Sending output to %s... " % phoneaddress["mms"])
+            send(outbox, address, password, phoneaddress["mms"], "> %s\r\n%s" % (request, result))
             force_print("done.\n")
         time.sleep(3)
