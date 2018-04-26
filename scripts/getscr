@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+
+temp_screenshot_file='/tmp/temp_screenshot.png'
+temp_screenshot_jpg='/tmp/temp_screenshot.jpg'
+scrot $temp_screenshot_file
+xclip -selection clipboard -t image/png -i $temp_screenshot_file
+#ffmpeg -y -i $temp_screenshot_file $temp_screenshot_jpg 
+convert $temp_screenshot_file $temp_screenshot_jpg
+
