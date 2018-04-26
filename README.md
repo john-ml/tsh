@@ -1,6 +1,6 @@
 # tsh
 
-Command-line utility. Uses an SMS gateway to communicate with a phone via GMail,
+Command-line utility. Uses SMS/MMS gateways to communicate with a phone via GMail,
 allowing you to text shell commands to your computer.
 
 ### Requirements
