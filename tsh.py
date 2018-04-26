@@ -32,6 +32,7 @@ def emails(inbox, phoneaddress):
         for part in data:
             if isinstance(part, tuple):
                 msg = email.message_from_string(part[1].decode("utf-8"))
+                print(msg.is_multipart())
 
                 # adapted from https://stackoverflow.com/questions/17874360/python-how-to-parse-the-body-from-a-raw-email-given-that-raw-email-does-not
                 if msg.is_multipart():
@@ -40,14 +41,15 @@ def emails(inbox, phoneaddress):
                         cdispo = str(part.get("Content-Disposition"))
 
                         # skip any text/plain (txt) attachments
-                        if ctype == "text/plain" and "attachment" not in cdispo:
-                            body = part.get_payload(decode=True)  # decode
+                        if "text" in ctype and "attachment" not in cdispo:
+                            print(part.get_payload(decode=True))
+                            body = asciiify(part.get_payload(decode=True))
+                            body = body[body.find(".")+1:body.rfind(".")+1]
                             break
                 # not multipart - i.e. plain text, no attachments, keeping fingers crossed
                 else:
-                    body = msg.get_payload(decode=True)
+                    body = asciiify(msg.get_payload(decode=True))
 
-                body = asciiify(body)
                 result.append({
                     "sender": msg["From"],
                     "subject": msg["Subject"],
@@ -79,14 +81,13 @@ if __name__ == "__main__":
         number = input("Phone number (numbers only): ")
 
     gateways = {
-        "Alltel": "message.alltel.com",
-        "AT&T": "txt.att.net",
-        "T-Mobile": "tmomail.net",
-        "Virgin Mobile": "vmobl.com",
-        "Sprint": "messaging.sprintpcs.com",
-        "Verizon": "vtext.com",
-        "Nextel": "messaging.nextel.com",
-        "US Cellular": "mms.uscc.net"
+        "Alltel": { "sms": "message.alltel.com", "mms": "mms.alltelwireless.com" },
+        "AT&T": { "sms": "txt.att.net", "mms": "mms.att.net" },
+        "T-Mobile": { "sms": "tmomail.net", "mms": "tmomail.net" },
+        "Virgin Mobile": { "sms": "vmobl.com", "mms": "vmpix.com" }, # "sms.myboostmobile.com"
+        "Sprint": { "sms": "messaging.sprintpcs.com", "mms": "pm.sprint.com" },
+        "Verizon": { "sms": "vtext.com", "mms": "vzwpix.com" },
+        "US Cellular": { "sms": "mms.uscc.net", "mms": "mms.uscc.net" }
     }
     while True:
         if argc > 1:
@@ -101,7 +102,7 @@ if __name__ == "__main__":
         else:
             gateway = gateways[service]
             break
-    phoneaddress = number + "@" + gateway
+    phoneaddress = number + "@" + gateway["mms"]
 
     if argc > 2:
         address = sys.argv[3]
