@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+
+xdotool key Alt_L+Shift+$1
+
