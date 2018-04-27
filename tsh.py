@@ -155,7 +155,13 @@ if __name__ == "__main__":
 
     while True:
         force_print("Retrieving requests... ")
-        requests = emails(inbox, phoneaddress)
+        try:
+            requests = emails(inbox, phoneaddress)
+        except imaplib.abort: # timed out
+            force_print("connection timed out. Reconnecting... ")
+            inbox = imaplib.IMAP4_SSL("imap.gmail.com")
+            inbox.login(address, password)
+            requests = emails(inbox, phoneaddress)
         requests = [r["body"] for r in requests] # get text message
         requests = [r[0:r.find("\r\n")] for r in requests] # first line only
         requests = requests[::-1] # execute earliest to latest
