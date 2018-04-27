@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
 
-xdotool key Super_L+w
+sleep 0.1
+#xdotool key Super_L+w
+i3-msg -t run_command kill
 
