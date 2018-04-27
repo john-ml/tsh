@@ -67,7 +67,6 @@ def emails(inbox, phoneaddress):
 # adapted from http://naelshiab.com/tutorial-send-email-python/
 def send(outbox, sender, password, receiver, message):
     identifier = "".join([chr(random.randint(32, 127)) for i in range(10)])
-    force_print("identifier: %s " % identifier)
     try:
         outbox.sendmail(sender, receiver, "TO: %s\r\n%s\r\n\r\n%s" % (receiver, identifier, message))
     except smtplib.SMTPSenderRefused: # log in again on timeout
@@ -79,7 +78,6 @@ def send(outbox, sender, password, receiver, message):
 
 def send_screen(outbox, sender, password, receiver):
     identifier = "".join([chr(random.randint(32, 127)) for i in range(10)])
-    force_print("identifier: %s " % identifier)
 
     subprocess.call(["sh", "scripts/getscr"])
     img_data = open("/tmp/temp_screenshot.jpg", "rb").read()
@@ -173,7 +171,9 @@ if __name__ == "__main__":
                 outbox.quit()
                 exit()
             if request.strip() == "getscr":
+                force_print("Sending screenshot... ")
                 send_screen(outbox, address, password, phoneaddress["mms"])
+                force_print("done.")
                 continue
             result = subprocess.Popen(request, shell=True, stdout=subprocess.PIPE).stdout.read()
             result = asciiify(result)
