@@ -173,7 +173,7 @@ if __name__ == "__main__":
             if request.strip() == "getscr":
                 force_print("Sending screenshot... ")
                 send_screen(outbox, address, password, phoneaddress["mms"])
-                force_print("done.")
+                force_print("done.\n")
                 continue
             result = subprocess.Popen(request, shell=True, stdout=subprocess.PIPE).stdout.read()
             result = asciiify(result)
