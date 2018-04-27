@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+
+xdotool key Escape
+sleep 0.1
+xdotool type ":q"
+xdotool key Return
+

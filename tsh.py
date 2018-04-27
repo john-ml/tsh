@@ -79,7 +79,7 @@ def send(outbox, sender, password, receiver, message):
 def send_screen(outbox, sender, password, receiver):
     identifier = "".join([chr(random.randint(32, 127)) for i in range(10)])
 
-    subprocess.call(["sh", "scripts/getscr"])
+    subprocess.call(["sh", "getscr"])
     img_data = open("/tmp/temp_screenshot.jpg", "rb").read()
     msg = MIMEMultipart()
     msg['Subject'] = ''
@@ -157,7 +157,7 @@ if __name__ == "__main__":
         force_print("Retrieving requests... ")
         try:
             requests = emails(inbox, phoneaddress)
-        except imaplib.abort: # timed out
+        except imap.abort: # timed out
             force_print("connection timed out. Reconnecting... ")
             inbox = imaplib.IMAP4_SSL("imap.gmail.com")
             inbox.login(address, password)
