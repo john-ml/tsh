@@ -157,8 +157,9 @@ if __name__ == "__main__":
         force_print("Retrieving requests... ")
         try:
             requests = emails(inbox, phoneaddress)
-        except imap.abort: # timed out
+        except: # imaplib.abort: # timed out
             force_print("connection timed out. Reconnecting... ")
+            inbox.logout()
             inbox = imaplib.IMAP4_SSL("imap.gmail.com")
             inbox.login(address, password)
             requests = emails(inbox, phoneaddress)
